@@ -1,0 +1,20 @@
+{
+    "enable_anti_porn": {
+        "type": "bool",
+        "description": "是否启用反瑟瑟",
+        "default": false,
+        "hint": "设置为True则启用，反之则不启用"
+    },
+    "local_censor_keywords": {
+        "type": "string",
+        "description": "消息本地审查关键词",
+        "default": "",
+        "hint": "设置本地审查敏感词，使用引文分号分隔分割"
+    },
+    "llm_censor_probability": {
+        "type": "float",
+        "description": "消息审查概率",
+        "default": 0.1,
+        "hint": "根据设置的概率对所有消息随机审查"
+    }
+}
