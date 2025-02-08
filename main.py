@@ -6,6 +6,7 @@ from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
+from astrbot.core.star.filter.permission import PermissionType
 
 logger = logging.getLogger("astrbot")
 
@@ -104,6 +105,7 @@ class AntiPorn(Star):
         if not await self._is_self_admin(event):
             logging.info("Bot 不是该群管理员，无需检测群聊是否合规")
             return
+        logger.info("SENSOR CALLED")
 
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
