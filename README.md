@@ -21,12 +21,11 @@
    将插件放入 Astrbot 插件目录（例如 `data/plugins/`）。
 
 2. **配置插件**
-   在 `config.yml` 文件中添加以下内容（可根据需求调整）：
-   ```yaml
-   enable_anti_porn: true
-   local_censor_keywords: "敏感词1;敏感词2;敏感词3"
-   llm_censor_probability: 0.1
-   ```
+   在插件配置页设置。
+   
+- enable_anti_porn: 是否启用
+- local_censor_keywords: 本地审查敏感词，以英文分号隔开（敏感词1;敏感词2;敏感词3）
+- llm_censor_probability: LLM审查调用概率
 
 3. **启用/关闭反瑟瑟模式**（需要管理员权限）
    在群聊中发送命令：
