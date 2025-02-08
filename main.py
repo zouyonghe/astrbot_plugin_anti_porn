@@ -6,7 +6,6 @@ from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
-from astrbot.core.star.filter.permission import PermissionType
 
 logger = logging.getLogger("astrbot")
 
@@ -112,7 +111,7 @@ class AntiPorn(Star):
                 message_content = comp.toString()
                 logger.info(f"Text message content: {message_content}")
                 # 本地检查
-                if await self._local_censor_check(message_content):
+                if self._local_censor_check(message_content):
                     logger.info(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content)
                     return
