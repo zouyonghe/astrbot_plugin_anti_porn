@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 
 from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
@@ -33,7 +34,7 @@ class AntiPorn(Star):
                 message_id=int(event.message_obj.message_id),
                 self_id=int(event.get_self_id())
             )
-            logger.debug(f"Anti porn deleted message: {message}")
+            logger.info(f"Anti porn deleted message: {message}")
 
             await self.bot.set_group_ban(
                 group_id=int(event.get_group_id()),
@@ -41,17 +42,30 @@ class AntiPorn(Star):
                 duration=5 * 60,
                 self_id=int(event.get_self_id())
             )
-            logger.debug(f"Banned user: {event.get_sender_id()} for 5 minutes")
+            logger.info(f"Banned user: {event.get_sender_id()} for 5 minutes")
 
         except Exception as e:
             logger.error(f"Failed to delete and ban: {e}")
 
         await event.stop_event()
 
-    async def _local_censor_check(self, message: str) -> bool:
-        """本地关键字检测"""
+    def _local_censor_check(self, message: str) -> bool:
         local_censor_keywords = self.config.get("local_censor_keywords", "").split(";")
-        return any(keyword in message for keyword in local_censor_keywords)
+
+        # 将消息转换为小写，避免大小写干扰
+        message = message.lower()
+
+        # 去除消息中的标点符号和空格
+        # 在中文中，标点符号需要特别处理
+        message = re.sub(r"[^\w\u4e00-\u9fa5\s]", "", message)  # 保留中文字符和字母数字
+
+        # 检查是否包含敏感词
+        for keyword in local_censor_keywords:
+            # 如果敏感词在消息中以完整词的形式出现，则认为包含该敏感词
+            # 在中文中，敏感词可能是连续字符，因此这里不需要空格分隔
+            if re.search(r"\b" + re.escape(keyword.lower()) + r"\b", message):
+                return True
+        return False
 
     async def _llm_censor_check(self, event: AstrMessageEvent, message: str) -> bool:
         """调用 LLM 进行敏感内容检测，只有在消息字数 < 50 并且满足概率要求时才执行"""
@@ -88,22 +102,22 @@ class AntiPorn(Star):
 
         # 检查 Bot 是否为管理员
         if not await self._is_self_admin(event):
-            logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
+            logging.info("Bot 不是该群管理员，无需检测群聊是否合规")
             return
 
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
                 message_content = comp.toString()
-
+                logger.info(f"Text message content: {message_content}")
                 # 本地检查
                 if await self._local_censor_check(message_content):
-                    logger.debug(f"Local sensor found illegal message: {message_content}")
+                    logger.info(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content)
                     return
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
-                    logger.debug(f"LLM censor found illegal message: {message_content}")
+                    logger.info(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content)
                     return
 
