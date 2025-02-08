@@ -10,9 +10,9 @@ logger = logging.getLogger("astrbot")
 
 @register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.0", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
-    def __init__(self, context: Context, config: dict, bot: CQHttp):
+    def __init__(self, context: Context, config: dict):
         super().__init__(context)
-        self.bot = bot
+        self.bot = CQHttp
         self.config = config
 
     async def _is_self_admin(self, event: AstrMessageEvent) -> bool:
@@ -20,7 +20,7 @@ class AntiPorn(Star):
         try:
             self_id = int(event.get_self_id())
             group_id = int(event.get_group_id())
-            member_info = await self.bot.api.get_group_member_info(group_id=group_id, user_id=self_id)
+            member_info = await self.bot.get_group_member_info(group_id=group_id, user_id=self_id)
             return member_info.get("role") in ["admin", "owner"]
         except Exception as e:
             logging.error(f"获取群成员信息失败: {e}")
@@ -29,13 +29,13 @@ class AntiPorn(Star):
     async def _delete_and_ban(self, event: AstrMessageEvent, message: str):
         """删除消息并禁言用户"""
         try:
-            await self.bot.api.delete_msg(
+            await self.bot.delete_msg(
                 message_id=int(event.message_obj.message_id),
                 self_id=int(event.get_self_id())
             )
             logger.debug(f"Anti porn deleted message: {message}")
 
-            await self.bot.api.set_group_ban(
+            await self.bot.set_group_ban(
                 group_id=int(event.get_group_id()),
                 user_id=int(event.get_sender_id()),
                 duration=5 * 60,
