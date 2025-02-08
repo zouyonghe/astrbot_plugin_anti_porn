@@ -96,7 +96,7 @@ class AntiPorn(Star):
 
         return False
 
-    @event_message_type(EventMessageType.ALL)
+    @event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
         """检测消息是否包含敏感内容"""
 
