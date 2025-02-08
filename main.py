@@ -3,7 +3,6 @@ import random
 import re
 
 from astrbot.api.event import filter
-from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
@@ -97,7 +96,7 @@ class AntiPorn(Star):
 
         return False
 
-    @filter.event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
+    @filter.event_message_type(EventMessageType.ALL, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
         """检测消息是否包含敏感内容"""
 
@@ -123,7 +122,7 @@ class AntiPorn(Star):
                     await self._delete_and_ban(event, message_content)
                     return
 
-    @permission_type(PermissionType.ADMIN)
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @command("anti_porn")
     async def anti_porn(self, event: AstrMessageEvent):
         """切换反瑟瑟模式（enable_anti_porn）"""
