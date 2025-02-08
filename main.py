@@ -2,10 +2,10 @@ import logging
 import random
 import re
 
-from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
+from astrbot.api.event.filter import *
 
 logger = logging.getLogger("astrbot")
 
@@ -13,30 +13,32 @@ logger = logging.getLogger("astrbot")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
-        self.bot = CQHttp
         self.config = config
 
-    async def _is_self_admin(self, event: AstrMessageEvent) -> bool:
-        """检查当前 bot 是否是群管理员或群主"""
+    async def _admin_check(self, event: AstrMessageEvent, client: CQHttp) -> bool:
+        """检查当前 bot 是否是群管理员或群主并且消息发送者不是管理员或群主"""
         try:
-            self_id = int(event.get_self_id())
+            sender_id = int(event.get_sender_id())
             group_id = int(event.get_group_id())
-            member_info = await self.bot.get_group_member_info(group_id=group_id, user_id=self_id)
-            return member_info.get("role") in ["admin", "owner"]
+            bot_id = int(event.get_self_id())
+
+            bot_info = await client.get_group_member_info(group_id=group_id, user_id=bot_id, no_cache=True, self_id=int(event.get_self_id()))
+            sender_info = await client.get_group_member_info(group_id=group_id, user_id=sender_id, no_cache=True, self_id=int(event.get_self_id()))
+            return bot_info.get("role") in ["admin", "owner"] and sender_info.get("role") not in ["admin", "owner"]
         except Exception as e:
             logging.error(f"获取群成员信息失败: {e}")
             return False
 
-    async def _delete_and_ban(self, event: AstrMessageEvent, message: str):
+    async def _delete_and_ban(self, event: AstrMessageEvent, message: str, client: CQHttp):
         """删除消息并禁言用户"""
         try:
-            await self.bot.delete_msg(
+            await client.delete_msg(
                 message_id=int(event.message_obj.message_id),
                 self_id=int(event.get_self_id())
             )
             logger.info(f"Anti porn deleted message: {message}")
 
-            await self.bot.set_group_ban(
+            await client.set_group_ban(
                 group_id=int(event.get_group_id()),
                 user_id=int(event.get_sender_id()),
                 duration=5 * 60,
@@ -47,7 +49,7 @@ class AntiPorn(Star):
         except Exception as e:
             logger.error(f"Failed to delete and ban: {e}")
 
-        await event.stop_event()
+        event.stop_event()
 
     def _local_censor_check(self, message: str) -> bool:
         local_censor_keywords = self.config.get("local_censor_keywords", "").split(";")
@@ -98,16 +100,17 @@ class AntiPorn(Star):
 
     @event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
-        print("CALLED HERE")
         """检测消息是否包含敏感内容"""
         if not self.config.get("enable_anti_porn", False):
             return
 
-        # 检查 Bot 是否为管理员
-        if not await self._is_self_admin(event):
+        from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
+        assert isinstance(event, AiocqhttpMessageEvent)
+        client = event.bot
+        # 检查bot为管理员，消息发送者不为管理员
+        if not await self._admin_check(event, client):
             logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
-        print("SENSOR CALLED")
 
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
@@ -116,13 +119,13 @@ class AntiPorn(Star):
                 # 本地检查
                 if self._local_censor_check(message_content):
                     logger.debug(f"Local sensor found illegal message: {message_content}")
-                    await self._delete_and_ban(event, message_content)
+                    await self._delete_and_ban(event, message_content, client)
                     return
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
                     logger.debug(f"LLM censor found illegal message: {message_content}")
-                    await self._delete_and_ban(event, message_content)
+                    await self._delete_and_ban(event, message_content, client)
                     return
 
     @permission_type(PermissionType.ADMIN)
