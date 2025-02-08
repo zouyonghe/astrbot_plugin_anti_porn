@@ -106,7 +106,7 @@ class AntiPorn(Star):
         if not await self._is_self_admin(event):
             logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
-        logger.debug("SENSOR CALLED")
+        print("SENSOR CALLED")
 
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
