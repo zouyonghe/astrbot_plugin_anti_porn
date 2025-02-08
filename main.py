@@ -2,7 +2,7 @@ import logging
 import random
 import re
 
-from astrbot.api.event import filter
+from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
@@ -96,33 +96,35 @@ class AntiPorn(Star):
 
         return False
 
-    @filter.event_message_type(EventMessageType.ALL, priority=10)
+    @event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
         """检测消息是否包含敏感内容"""
+        if not self.config.get("enable_anti_porn", False):
+            return
 
         # 检查 Bot 是否为管理员
         if not await self._is_self_admin(event):
-            logging.info("Bot 不是该群管理员，无需检测群聊是否合规")
+            logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
-        logger.info("SENSOR CALLED")
+        logger.debug("SENSOR CALLED")
 
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
                 message_content = comp.toString()
-                logger.info(f"Text message content: {message_content}")
+                logger.debug(f"Text message content: {message_content}")
                 # 本地检查
                 if self._local_censor_check(message_content):
-                    logger.info(f"Local sensor found illegal message: {message_content}")
+                    logger.debug(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content)
                     return
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
-                    logger.info(f"LLM censor found illegal message: {message_content}")
+                    logger.debug(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content)
                     return
 
-    @filter.permission_type(filter.PermissionType.ADMIN)
+    @permission_type(PermissionType.ADMIN)
     @command("anti_porn")
     async def anti_porn(self, event: AstrMessageEvent):
         """切换反瑟瑟模式（enable_anti_porn）"""
