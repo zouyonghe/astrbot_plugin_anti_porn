@@ -2,6 +2,7 @@ import logging
 import random
 import re
 
+from astrbot.api.event import filter
 from astrbot.api.event.filter import *
 from aiocqhttp import CQHttp
 
@@ -96,9 +97,8 @@ class AntiPorn(Star):
 
         return False
 
-    @event_message_type(EventMessageType.PRIVATE_MESSAGE, priority=10)
+    @filter.event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
-        yield event.plain_result("收到了一条私聊消息。")
         """检测消息是否包含敏感内容"""
 
         # 检查 Bot 是否为管理员
