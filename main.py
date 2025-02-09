@@ -60,19 +60,15 @@ class AntiPorn(Star):
 
     def _local_censor_check(self, message: str) -> bool:
         local_censor_keywords = self.config.get("local_censor_keywords", "").split(";")
-
-        # 将消息转换为小写，避免大小写干扰
+        logger.error(f"local_censor_keywords: {local_censor_keywords}")
         message = message.lower()
 
         # 去除消息中的标点符号和空格
-        # 在中文中，标点符号需要特别处理
-        message = re.sub(r"[^\w\u4e00-\u9fa5\s]", "", message)  # 保留中文字符和字母数字
+        message = re.sub(r"[^\w\u4e00-\u9fa5]", "", message)  # 保留字母、数字和中文字符
 
         # 检查是否包含敏感词
         for keyword in local_censor_keywords:
-            # 如果敏感词在消息中以完整词的形式出现，则认为包含该敏感词
-            # 在中文中，敏感词可能是连续字符，因此这里不需要空格分隔
-            if re.search(r"\b" + re.escape(keyword.lower()) + r"\b", message):
+            if keyword.lower() in message:  # 检查敏感词是否在消息中
                 return True
         return False
 
