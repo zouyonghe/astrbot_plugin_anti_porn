@@ -142,11 +142,11 @@ class AntiPorn(Star):
                     await self._delete_and_ban(event, message_content, client)
                     return
 
-    @permission_type(PermissionType.ADMIN)
     @command_group("anti_porn")
     def anti_porn(self):
         pass
 
+    @permission_type(PermissionType.ADMIN)
     @anti_porn.command("enable")
     async def enable_anti_porn(self, event: AstrMessageEvent):
         """开启反瑟瑟模式"""
@@ -161,6 +161,7 @@ class AntiPorn(Star):
             logger.error(f"开启反瑟瑟模式失败: {e}")
             yield event.plain_result("❌ 开启失败，请检查配置")
 
+    @permission_type(PermissionType.ADMIN)
     @anti_porn.command("disable")
     async def disable_anti_porn(self, event: AstrMessageEvent):
         """关闭反瑟瑟模式"""
