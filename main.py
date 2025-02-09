@@ -41,7 +41,7 @@ class AntiPorn(Star):
             await client.set_group_ban(
                 group_id=int(event.get_group_id()),
                 user_id=int(event.get_sender_id()),
-                duration=5 * 60,
+                duration=self.config.get("group_ban_time", 5) * 60,
                 self_id=int(event.get_self_id())
             )
             logger.info(f"Banned user: {event.get_sender_id()} for 5 minutes")
@@ -81,8 +81,12 @@ class AntiPorn(Star):
             logger.warning("No available LLM provider")
             return False
 
+        custom_guidelines = self.config.get("custom_guideline", "")
         censor_prompt = (
-            f"Does the following message contain pornography or inappropriate content? "
+            f"Analyze the following message and determine whether it contains actual pornography or inappropriate content, "
+            f"considering the overall context. Do not judge based on isolated words or phrases. "
+            f"Additionally, consider the following user-defined guidelines when making your judgment:\n\n"
+            f"{custom_guidelines}\n\n"
             f"Answer only 'Yes' or 'No' with no additional explanation.\n\n"
             f"Message: {message}"
         )

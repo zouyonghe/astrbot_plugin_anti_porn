@@ -5,16 +5,28 @@
         "default": false,
         "hint": "设置为True则启用，反之则不启用"
     },
+    "group_ban_time": {
+        "type": "float",
+        "description": "禁言时间，单位：分钟",
+        "default": 1,
+        "hint": ""
+    },
     "local_censor_keywords": {
         "type": "string",
         "description": "消息本地审查关键词",
         "default": "裸体;",
-        "hint": "设置本地审查敏感词，使用引文分号分隔分割"
+        "hint": "设置本地审查敏感词，使用英文分号分隔"
     },
     "llm_censor_probability": {
         "type": "float",
-        "description": "消息审查概率",
+        "description": "调用LLM审查消息概率",
         "default": 0.1,
         "hint": "根据设置的概率对所有消息随机审查，0代表不使用LLM审查，1代表必然使用LLM审查"
+    },
+    "custom_guidelines": {
+        "type": "string",
+        "description": "LLM审查附加要求",
+        "default": "",
+        "hint": "在调用LLM审查时，此部分内容会被附加到审查要求中"
     }
 }
