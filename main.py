@@ -143,20 +143,84 @@ class AntiPorn(Star):
                     return
 
     @permission_type(PermissionType.ADMIN)
-    @command("anti_porn")
-    async def anti_porn(self, event: AstrMessageEvent):
-        """切换反瑟瑟模式（enable_anti_porn）"""
+    @command_group("anti_porn")
+    def anti_porn(self):
+        pass
+
+    @anti_porn.command("enable")
+    async def enable_anti_porn(self, event: AstrMessageEvent):
+        """开启反瑟瑟模式"""
         try:
-            # 读取当前状态并取反
-            current_set = bool(self.config.get("enable_anti_porn", False))
-            new_set = not current_set
+            if self.config.get("enable_anti_porn", False):
+                yield event.plain_result("✅ 反瑟瑟模式已经是开启状态")
+                return
 
-            # 更新配置
-            self.config["enable_anti_porn"] = new_set
-
-            # 发送反馈消息
-            status = "开启" if new_set else "关闭"
-            yield event.plain_result(f"📢 反瑟瑟模式已{status}")
+            self.config["enable_anti_porn"] = True
+            yield event.plain_result("📢 反瑟瑟模式已开启")
         except Exception as e:
-            logger.error(f"切换反瑟瑟模式失败: {e}")
-            yield event.plain_result("❌ 切换反瑟瑟模式失败，请检查配置")
+            logger.error(f"开启反瑟瑟模式失败: {e}")
+            yield event.plain_result("❌ 开启失败，请检查配置")
+
+    @anti_porn.command("disable")
+    async def disable_anti_porn(self, event: AstrMessageEvent):
+        """关闭反瑟瑟模式"""
+        try:
+            if not self.config.get("enable_anti_porn", False):
+                yield event.plain_result("✅ 反瑟瑟模式已经是关闭状态")
+                return
+
+            self.config["enable_anti_porn"] = False
+            yield event.plain_result("📢 反瑟瑟模式已关闭")
+        except Exception as e:
+            logger.error(f"关闭反瑟瑟模式失败: {e}")
+            yield event.plain_result("❌ 关闭失败，请检查配置")
+
+    @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("add")
+    async def add_to_white_list(self, event: AstrMessageEvent, group_num: str):
+        """添加群组到白名单"""
+        try:
+            group_white_list = self.config.get("group_white_list", "").split(";")
+            if group_num in group_white_list:
+                yield event.plain_result(f"✅ 群 {group_num} 已在白名单中")
+                return
+
+            group_white_list.append(group_num)
+            self.config["group_white_list"] = ";".join(filter(None, group_white_list))
+            yield event.plain_result(f"✅ 群 {group_num} 已添加到白名单")
+        except Exception as e:
+            logger.error(f"添加群组到白名单失败: {e}")
+            yield event.plain_result("❌ 添加失败，请检查配置")
+
+    @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("del")
+    async def del_from_white_list(self, event: AstrMessageEvent, group_num: str):
+        """从白名单中删除群组"""
+        try:
+            group_white_list = self.config.get("group_white_list", "").split(";")
+            if group_num not in group_white_list:
+                yield event.plain_result(f"⚠️ 群 {group_num} 不在白名单中")
+                return
+
+            group_white_list.remove(group_num)
+            self.config["group_white_list"] = ";".join(filter(None, group_white_list))
+            yield event.plain_result(f"✅ 群 {group_num} 已从白名单中移除")
+        except Exception as e:
+            logger.error(f"从白名单删除群组失败: {e}")
+            yield event.plain_result("❌ 删除失败，请检查配置")
+
+    @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("list")
+    async def list_white_list(self, event: AstrMessageEvent):
+        """查询白名单列表"""
+        try:
+            group_white_list = self.config.get("group_white_list", "").split(";")
+            if not group_white_list or all(not g.strip() for g in group_white_list):
+                yield event.plain_result("📜 目前白名单为空")
+                return
+
+            white_list_str = "\n".join(group_white_list)
+            yield event.plain_result(f"📜 当前白名单群组:\n{white_list_str}")
+        except Exception as e:
+            logger.error(f"查询白名单失败: {e}")
+            yield event.plain_result("❌ 查询失败，请检查配置")

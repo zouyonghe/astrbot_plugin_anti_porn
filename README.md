@@ -15,6 +15,7 @@
   - `local_censor_keywords`：本地敏感词列表（多个词用 `;` 分隔）
   - `llm_censor_probability`：LLM 审查触发概率（默认 `0.1`）
   - `enable_anti_porn`：是否启用反瑟瑟模式
+  - `group_white_list`：白名单群组（多个群用 `;` 分隔）
 
 ## 安装与使用
 1. **安装插件**
@@ -22,17 +23,28 @@
 
 2. **配置插件**
    在插件配置页设置。
-   
-- enable_anti_porn: 是否启用
-- local_censor_keywords: 本地审查敏感词，以英文分号隔开（敏感词1;敏感词2;敏感词3）
-- llm_censor_probability: LLM审查调用概率
 
-3. **启用/关闭反瑟瑟模式**（需要管理员权限）
-   在群聊中发送命令：
-   ```
-   /anti_porn
-   ```
-   机器人将切换模式并反馈当前状态。
+3. **命令列表**（需要管理员权限）
+   - **启用反瑟瑟模式**
+     ```
+     /anti_porn enable
+     ```
+   - **禁用反瑟瑟模式**
+     ```
+     /anti_porn disable
+     ```
+   - **添加群组到白名单**
+     ```
+     /anti_porn add <群号>
+     ```
+   - **从白名单中删除群组**
+     ```
+     /anti_porn del <群号>
+     ```
+   - **查询群白名单列表**
+     ```
+     /anti_porn list
+     ```
 
 ## 许可证
 MIT License
