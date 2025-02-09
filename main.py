@@ -29,6 +29,13 @@ class AntiPorn(Star):
             logging.error(f"获取群成员信息失败: {e}")
             return False
 
+    def _in_group_white_list(self, event: AstrMessageEvent) -> bool:
+        group_white_list = self.config.get("group_white_list", "").split(";")
+        if str(event.get_group_id()) in group_white_list:
+            logger.debug(f"群 {event.get_group_id()} 在白名单内，跳过审查")
+            return True
+        return False
+
     async def _delete_and_ban(self, event: AstrMessageEvent, message: str, client: CQHttp):
         """删除消息并禁言用户"""
         try:
@@ -106,6 +113,9 @@ class AntiPorn(Star):
     async def sensor_porn(self, event: AstrMessageEvent):
         """检测消息是否包含敏感内容"""
         if not self.config.get("enable_anti_porn", False):
+            return
+
+        if not self._in_group_white_list(event):
             return
 
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
