@@ -32,7 +32,7 @@ class AntiPorn(Star):
     def _in_group_white_list(self, event: AstrMessageEvent) -> bool:
         group_white_list = self.config.get("group_white_list", "").split(";")
         if str(event.get_group_id()) in group_white_list:
-            logger.debug(f"群 {event.get_group_id()} 在白名单内，跳过审查")
+            logger.error(f"群 {event.get_group_id()} 在白名单内，跳过审查")
             return True
         return False
 
