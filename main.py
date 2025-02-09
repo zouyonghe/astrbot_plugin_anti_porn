@@ -114,9 +114,11 @@ class AntiPorn(Star):
         """检测消息是否包含敏感内容"""
         if not self.config.get("enable_anti_porn", False):
             return
+        logger.error("STEP 1 PASSED")
 
         if not self._in_group_white_list(event):
             return
+        logger.error("STEP 2 PASSED")
 
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
         assert isinstance(event, AiocqhttpMessageEvent)
@@ -125,7 +127,7 @@ class AntiPorn(Star):
         if not await self._admin_check(event, client):
             logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
-
+        logger.error("STEP 3 PASSED")
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
                 message_content = comp.toString()
@@ -135,12 +137,14 @@ class AntiPorn(Star):
                     logger.debug(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
+                logger.error("STEP 4 PASSED")
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
                     logger.debug(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
+                logger.error("STEP 5 PASSED")
 
     @permission_type(PermissionType.ADMIN)
     @command("anti_porn")
