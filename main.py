@@ -76,17 +76,17 @@ class AntiPorn(Star):
                 return True
         return False
 
-    async def _llm_censor_check(self, event: AstrMessageEvent, message: str) -> bool:
+    async def _llm_censor_check(self, event: AstrMessageEvent, message: str):
         """调用 LLM 进行敏感内容检测，只有在消息字数 < 50 并且满足概率要求时才执行"""
         llm_probability = float(self.config.get("llm_censor_probability", 0.1))
         if len(message) > 50 or random.random() > llm_probability:
-            return False
+            return
 
         """调用 LLM 进行敏感内容检测"""
         provider = self.context.get_using_provider()
         if not provider:
             logger.warning("No available LLM provider")
-            return False
+            return
 
         custom_guidelines = self.config.get("custom_guideline", "")
         censor_prompt = (
@@ -107,7 +107,7 @@ class AntiPorn(Star):
         except Exception as e:
             logger.error(f"LLM censor request failed: {e}")
 
-        return False
+        return
 
     @event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
@@ -132,13 +132,13 @@ class AntiPorn(Star):
                 logger.debug(f"Text message content: {message_content}")
                 # 本地检查
                 if self._local_censor_check(message_content):
-                    logger.debug(f"Local sensor found illegal message: {message_content}")
+                    logger.error(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
-                    logger.debug(f"LLM censor found illegal message: {message_content}")
+                    logger.error(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
 
