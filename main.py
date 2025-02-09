@@ -125,7 +125,7 @@ class AntiPorn(Star):
         if not await self._admin_check(event, client):
             logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
-        logger.error("STEP 3 PASSED")
+
         for comp in event.get_messages():
             if isinstance(comp, BaseMessageComponent):
                 message_content = comp.toString()
