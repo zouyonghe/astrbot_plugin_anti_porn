@@ -9,7 +9,7 @@ from astrbot.api.event.filter import *
 
 logger = logging.getLogger("astrbot")
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.0", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.1", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
@@ -60,9 +60,11 @@ class AntiPorn(Star):
 
     def _local_censor_check(self, message: str) -> bool:
         local_censor_keywords = self.config.get("local_censor_keywords", "").split(";")
-        logger.error(f"local_censor_keywords: {local_censor_keywords}")
-        message = message.lower()
+        # 如果敏感词列表为空，直接返回 False 或其他适当的处理
+        if not local_censor_keywords:
+            return False
 
+        message = message.lower()
         # 去除消息中的标点符号和空格
         message = re.sub(r"[^\w\u4e00-\u9fa5]", "", message)  # 保留字母、数字和中文字符
 
@@ -128,13 +130,13 @@ class AntiPorn(Star):
                 logger.debug(f"Text message content: {message_content}")
                 # 本地检查
                 if self._local_censor_check(message_content):
-                    logger.error(f"Local sensor found illegal message: {message_content}")
+                    logger.debug(f"Local sensor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
 
                 # 调用LLM检测
                 if await self._llm_censor_check(event, message_content):
-                    logger.error(f"LLM censor found illegal message: {message_content}")
+                    logger.debug(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
 
