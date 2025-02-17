@@ -174,8 +174,8 @@ class AntiPorn(Star):
             logger.error(f"关闭反瑟瑟模式失败: {e}")
             yield event.plain_result("❌ 关闭失败，请检查配置")
 
-    @anti_porn.command("add")
     @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("add")
     async def add_to_white_list(self, event: AstrMessageEvent, group_num: str):
         """添加群组到白名单"""
         try:
