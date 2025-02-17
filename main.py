@@ -144,8 +144,8 @@ class AntiPorn(Star):
     def anti_porn(self):
         pass
 
-    @anti_porn.command("enable")
     @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("enable")
     async def enable_anti_porn(self, event: AstrMessageEvent):
         """开启反瑟瑟模式"""
         try:
@@ -159,8 +159,8 @@ class AntiPorn(Star):
             logger.error(f"开启反瑟瑟模式失败: {e}")
             yield event.plain_result("❌ 开启失败，请检查配置")
 
-    @anti_porn.command("disable")
     @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("disable")
     async def disable_anti_porn(self, event: AstrMessageEvent):
         """关闭反瑟瑟模式"""
         try:
@@ -191,8 +191,8 @@ class AntiPorn(Star):
             logger.error(f"添加群组到白名单失败: {e}")
             yield event.plain_result("❌ 添加失败，请检查配置")
 
-    @anti_porn.command("del")
     @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("del")
     async def del_from_white_list(self, event: AstrMessageEvent, group_num: str):
         """从白名单中删除群组"""
         try:
@@ -208,8 +208,8 @@ class AntiPorn(Star):
             logger.error(f"从白名单删除群组失败: {e}")
             yield event.plain_result("❌ 删除失败，请检查配置")
 
-    @anti_porn.command("list")
     @permission_type(PermissionType.ADMIN)
+    @anti_porn.command("list")
     async def list_white_list(self, event: AstrMessageEvent):
         """查询白名单列表"""
         try:
