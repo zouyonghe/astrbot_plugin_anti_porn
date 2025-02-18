@@ -111,9 +111,11 @@ class AntiPorn(Star):
     async def sensor_porn(self, event: AstrMessageEvent):
         """检测消息是否包含敏感内容"""
         if not self.config.get("enable_anti_porn", False):
+            logger.error("HERE CALLED 1")
             return
 
         if self._in_group_white_list(event):
+            logger.error("HERE CALLED 2")
             return
 
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
