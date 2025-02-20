@@ -1,4 +1,3 @@
-import logging
 import random
 import re
 
@@ -6,8 +5,6 @@ from aiocqhttp import CQHttp
 
 from astrbot.api.all import *
 from astrbot.api.event.filter import *
-
-logger = logging.getLogger("astrbot")
 
 @register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.1", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
