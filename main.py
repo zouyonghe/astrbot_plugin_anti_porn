@@ -23,7 +23,7 @@ class AntiPorn(Star):
             sender_info = await client.get_group_member_info(group_id=group_id, user_id=sender_id, no_cache=True, self_id=int(event.get_self_id()))
             return bot_info.get("role") in ["admin", "owner"] and sender_info.get("role") not in ["admin", "owner"]
         except Exception as e:
-            logging.error(f"获取群成员信息失败: {e}")
+            logger.error(f"获取群成员信息失败: {e}")
             return False
 
     def _in_group_white_list(self, event: AstrMessageEvent) -> bool:
@@ -118,7 +118,7 @@ class AntiPorn(Star):
         client = event.bot
         # 检查bot为管理员，消息发送者不为管理员
         if not await self._admin_check(event, client):
-            logging.debug("Bot 不是该群管理员，无需检测群聊是否合规")
+            logger.debug("Bot 不是该群管理员，无需检测群聊是否合规")
             return
 
         for comp in event.get_messages():
