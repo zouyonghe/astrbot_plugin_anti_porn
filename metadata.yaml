@@ -1,6 +1,6 @@
 name: astrbot_plugin_anti_porn
 desc: 这是 AstrBot 的反瑟瑟插件。
 help: 输入 /anti_porn help 查看关键词回复帮助。
-version: v1.0.1
+version: v1.0.2
 author: buding
 repo: https://github.com/zouyonghe/astrbot_plugin_anti_porn

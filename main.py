@@ -6,7 +6,7 @@ from aiocqhttp import CQHttp
 from astrbot.api.all import *
 from astrbot.api.event.filter import *
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.1", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.2", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
