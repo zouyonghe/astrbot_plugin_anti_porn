@@ -122,7 +122,7 @@ class AntiPorn(Star):
             return
 
         for comp in event.get_messages():
-            if isinstance(comp, BaseMessageComponent):
+            if isinstance(comp, Plain):
                 message_content = comp.toString()
                 logger.debug(f"Text message content: {message_content}")
                 # 本地检查
