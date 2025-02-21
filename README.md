@@ -1,7 +1,5 @@
 # astrbot_plugin_anti_porn
 
-# astrbot_plugin_anti_porn
-
 ## 介绍
 
 `astrbot_plugin_anti_porn` 是一个 Astrbot 插件，专门用于检测和屏蔽群聊中的不当内容（如涉黄信息）。
