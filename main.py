@@ -26,10 +26,10 @@ class AntiPorn(Star):
             logger.error(f"获取群成员信息失败: {e}")
             return False
 
-    def _in_group_white_list(self, event: AstrMessageEvent) -> bool:
-        group_white_list = self.config.get("group_white_list", "").split(";")
-        if str(event.get_group_id()) in group_white_list:
-            logger.debug(f"群 {event.get_group_id()} 在白名单内，跳过审查")
+    def _in_group_sensor_list(self, event: AstrMessageEvent) -> bool:
+        group_sensor_list = self.config.get("group_sensor_list", [])
+        if str(event.get_group_id()) in group_sensor_list:
+            logger.debug(f"群 {event.get_group_id()} 在审查群组名单内")
             return True
         return False
 
@@ -110,7 +110,7 @@ class AntiPorn(Star):
         if not self.config.get("enable_anti_porn", False):
             return
 
-        if not self._in_group_white_list(event):
+        if not self._in_group_sensor_list(event):
             return
 
         from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
@@ -173,50 +173,50 @@ class AntiPorn(Star):
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("add")
-    async def add_to_white_list(self, event: AstrMessageEvent, group_num: str):
-        """添加群组到白名单"""
+    async def add_to_sensor_list(self, event: AstrMessageEvent, group_num: str):
+        """添加群组到审查名单"""
         try:
-            group_white_list = self.config.get("group_white_list", "").split(";")
-            if group_num in group_white_list:
-                yield event.plain_result(f"✅ 群 {group_num} 已在白名单中")
+            group_sensor_list = self.config.get("group_sensor_list", [])
+            if group_num in group_sensor_list:
+                yield event.plain_result(f"✅ 群 {group_num} 已在审查名单中")
                 return
 
-            group_white_list.append(group_num)
-            self.config["group_white_list"] = ";".join(filter(None, group_white_list))
-            yield event.plain_result(f"✅ 群 {group_num} 已添加到白名单")
+            group_sensor_list.append(group_num)
+            self.config["group_white_list"] = group_sensor_list
+            yield event.plain_result(f"✅ 群 {group_num} 已添加到审查名单")
         except Exception as e:
-            logger.error(f"添加群组到白名单失败: {e}")
+            logger.error(f"添加群组到审查名单失败: {e}")
             yield event.plain_result("❌ 添加失败，请检查配置")
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("del")
-    async def del_from_white_list(self, event: AstrMessageEvent, group_num: str):
-        """从白名单中删除群组"""
+    async def del_from_sensor_list(self, event: AstrMessageEvent, group_num: str):
+        """从审查名单中删除群组"""
         try:
-            group_white_list = self.config.get("group_white_list", "").split(";")
-            if group_num not in group_white_list:
-                yield event.plain_result(f"⚠️ 群 {group_num} 不在白名单中")
+            group_sensor_list = self.config.get("group_sensor_list", [])
+            if group_num not in group_sensor_list:
+                yield event.plain_result(f"⚠️ 群 {group_num} 不在审查名单中")
                 return
 
-            group_white_list.remove(group_num)
-            self.config["group_white_list"] = ";".join(filter(None, group_white_list))
-            yield event.plain_result(f"✅ 群 {group_num} 已从白名单中移除")
+            group_sensor_list.remove(group_num)
+            self.config["group_white_list"] = group_sensor_list
+            yield event.plain_result(f"✅ 群 {group_num} 已从审查名单中移除")
         except Exception as e:
-            logger.error(f"从白名单删除群组失败: {e}")
+            logger.error(f"从审查名单删除群组失败: {e}")
             yield event.plain_result("❌ 删除失败，请检查配置")
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("list")
     async def list_white_list(self, event: AstrMessageEvent):
-        """查询白名单列表"""
+        """查询审查群组名单"""
         try:
-            group_white_list = self.config.get("group_white_list", "").split(";")
-            if not group_white_list or all(not g.strip() for g in group_white_list):
-                yield event.plain_result("📜 目前白名单为空")
+            group_sensor_list = self.config.get("group_white_list", [])
+            if not group_sensor_list or all(not g.strip() for g in group_sensor_list):
+                yield event.plain_result("📜 目前审查群组名单为空")
                 return
 
-            white_list_str = "\n".join(group_white_list)
-            yield event.plain_result(f"📜 当前白名单群组:\n{white_list_str}")
+            sensor_list_str = "\n".join(group_sensor_list)
+            yield event.plain_result(f"📜 当前审查群组名单:\n{sensor_list_str}")
         except Exception as e:
-            logger.error(f"查询白名单失败: {e}")
+            logger.error(f"查询审查群组名单失败: {e}")
             yield event.plain_result("❌ 查询失败，请检查配置")

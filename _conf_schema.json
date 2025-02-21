@@ -13,7 +13,7 @@
     },
     "group_sensor_list": {
         "type": "list",
-        "description": "启用审查的群组列表",
+        "description": "启用审查的群组名单",
         "default": [],
         "hint": "设置启用审查的群组"
     },
