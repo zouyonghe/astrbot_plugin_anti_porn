@@ -182,7 +182,7 @@ class AntiPorn(Star):
                 return
 
             group_sensor_list.append(group_num)
-            self.config["group_white_list"] = group_sensor_list
+            self.config["group_sensor_list"] = group_sensor_list
             yield event.plain_result(f"✅ 群 {group_num} 已添加到审查名单")
         except Exception as e:
             logger.error(f"添加群组到审查名单失败: {e}")
@@ -199,7 +199,7 @@ class AntiPorn(Star):
                 return
 
             group_sensor_list.remove(group_num)
-            self.config["group_white_list"] = group_sensor_list
+            self.config["group_sensor_list"] = group_sensor_list
             yield event.plain_result(f"✅ 群 {group_num} 已从审查名单中移除")
         except Exception as e:
             logger.error(f"从审查名单删除群组失败: {e}")
@@ -207,10 +207,10 @@ class AntiPorn(Star):
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("list")
-    async def list_white_list(self, event: AstrMessageEvent):
+    async def list_sensor_list(self, event: AstrMessageEvent):
         """查询审查群组名单"""
         try:
-            group_sensor_list = self.config.get("group_white_list", [])
+            group_sensor_list = self.config.get("group_sensor_list", [])
             if not group_sensor_list or all(not g.strip() for g in group_sensor_list):
                 yield event.plain_result("📜 目前审查群组名单为空")
                 return
