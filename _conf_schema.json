@@ -11,11 +11,11 @@
         "default": 1,
         "hint": ""
     },
-    "group_white_list": {
-        "type": "string",
-        "description": "审查群组白名单",
-        "default": "",
-        "hint": "设置不用审查的群组，填写群号并使用英文分号分隔"
+    "group_sensor_list": {
+        "type": "list",
+        "description": "启用审查的群组列表",
+        "default": [],
+        "hint": "设置启用审查的群组"
     },
     "local_censor_keywords": {
         "type": "string",
