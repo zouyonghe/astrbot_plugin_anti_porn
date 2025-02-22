@@ -173,34 +173,42 @@ class AntiPorn(Star):
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("add")
-    async def add_to_sensor_list(self, event: AstrMessageEvent, group_num: str):
+    async def add_to_sensor_list(self, event: AstrMessageEvent, group_id: str):
         """添加群组到审查名单"""
         try:
             group_sensor_list = self.config.get("group_sensor_list", [])
-            if group_num in group_sensor_list:
-                yield event.plain_result(f"✅ 群 {group_num} 已在审查名单中")
+            if not group_id or group_id == "":
+                yield event.plain_result("⚠️ 群 {group_id} 不合法")
                 return
 
-            group_sensor_list.append(group_num)
+            if group_id in group_sensor_list:
+                yield event.plain_result(f"✅ 群 {group_id} 已在审查名单中")
+                return
+
+            group_sensor_list.append(group_id)
             self.config["group_sensor_list"] = group_sensor_list
-            yield event.plain_result(f"✅ 群 {group_num} 已添加到审查名单")
+            yield event.plain_result(f"✅ 群 {group_id} 已添加到审查名单")
         except Exception as e:
             logger.error(f"添加群组到审查名单失败: {e}")
             yield event.plain_result("❌ 添加失败，请检查配置")
 
     @permission_type(PermissionType.ADMIN)
     @anti_porn.command("del")
-    async def del_from_sensor_list(self, event: AstrMessageEvent, group_num: str):
+    async def del_from_sensor_list(self, event: AstrMessageEvent, group_id: str):
         """从审查名单中删除群组"""
         try:
             group_sensor_list = self.config.get("group_sensor_list", [])
-            if group_num not in group_sensor_list:
-                yield event.plain_result(f"⚠️ 群 {group_num} 不在审查名单中")
+            if not group_id or group_id == "":
+                yield event.plain_result("⚠️ 群 {group_id} 不合法")
                 return
 
-            group_sensor_list.remove(group_num)
+            if group_id not in group_sensor_list:
+                yield event.plain_result(f"⚠️ 群 {group_id} 不在审查名单中")
+                return
+
+            group_sensor_list.remove(group_id)
             self.config["group_sensor_list"] = group_sensor_list
-            yield event.plain_result(f"✅ 群 {group_num} 已从审查名单中移除")
+            yield event.plain_result(f"✅ 群 {group_id} 已从审查名单中移除")
         except Exception as e:
             logger.error(f"从审查名单删除群组失败: {e}")
             yield event.plain_result("❌ 删除失败，请检查配置")
@@ -211,7 +219,7 @@ class AntiPorn(Star):
         """查询审查群组名单"""
         try:
             group_sensor_list = self.config.get("group_sensor_list", [])
-            if not group_sensor_list or all(not g.strip() for g in group_sensor_list):
+            if not group_sensor_list:
                 yield event.plain_result("📜 目前审查群组名单为空")
                 return
 
