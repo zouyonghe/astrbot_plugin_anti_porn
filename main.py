@@ -6,11 +6,29 @@ from aiocqhttp import CQHttp
 from astrbot.api.all import *
 from astrbot.api.event.filter import *
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.2", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+PLUGIN_CONFIG_PATH = "data/config/astrbot_plugin_anti_porn_config.json"
+
+@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.3", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
         self.config = config
+
+    def save_plugin_config(self, file_path=PLUGIN_CONFIG_PATH):
+        """
+        保存插件配置到文件
+        Args:
+            file_path: 保存的配置文件路径
+        """
+        if not file_path:
+            logger.error("插件配置文件路径不存在，保存失败。")
+            return
+        try:
+            with open(file_path, "w", encoding="utf-8") as config_file:
+                json.dump(self.config, config_file, indent=2, ensure_ascii=False)
+            logger.info(f"插件配置已保存到文件: {file_path}")
+        except Exception as e:
+            logger.error(f"保存插件配置失败: {e}")
 
     async def _admin_check(self, event: AstrMessageEvent, client: CQHttp) -> bool:
         """检查当前 bot 是否是群管理员或群主并且消息发送者不是管理员或群主"""
@@ -151,6 +169,7 @@ class AntiPorn(Star):
                 return
 
             self.config["enable_anti_porn"] = True
+            self.save_plugin_config()
             yield event.plain_result("📢 反瑟瑟模式已开启")
         except Exception as e:
             logger.error(f"开启反瑟瑟模式失败: {e}")
@@ -166,6 +185,7 @@ class AntiPorn(Star):
                 return
 
             self.config["enable_anti_porn"] = False
+            self.save_plugin_config()
             yield event.plain_result("📢 反瑟瑟模式已关闭")
         except Exception as e:
             logger.error(f"关闭反瑟瑟模式失败: {e}")
@@ -187,6 +207,7 @@ class AntiPorn(Star):
 
             group_sensor_list.append(group_id)
             self.config["group_sensor_list"] = group_sensor_list
+            self.save_plugin_config()
             yield event.plain_result(f"✅ 群 {group_id} 已添加到审查名单")
         except Exception as e:
             logger.error(f"添加群组到审查名单失败: {e}")
@@ -208,6 +229,7 @@ class AntiPorn(Star):
 
             group_sensor_list.remove(group_id)
             self.config["group_sensor_list"] = group_sensor_list
+            self.save_plugin_config()
             yield event.plain_result(f"✅ 群 {group_id} 已从审查名单中移除")
         except Exception as e:
             logger.error(f"从审查名单删除群组失败: {e}")
