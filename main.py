@@ -245,7 +245,7 @@ class AntiPorn(Star):
                 yield event.plain_result("📜 目前审查群组名单为空")
                 return
 
-            sensor_list_str = "\n".join(group_sensor_list)
+            sensor_list_str = "\n".join(f"- {group_sensor_list}")
             yield event.plain_result(f"📜 当前审查群组名单:\n{sensor_list_str}")
         except Exception as e:
             logger.error(f"查询审查群组名单失败: {e}")
