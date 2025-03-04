@@ -8,7 +8,7 @@ from astrbot.api.event.filter import *
 
 PLUGIN_CONFIG_PATH = "data/config/astrbot_plugin_anti_porn_config.json"
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.3", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.4", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: dict):
         super().__init__(context)
