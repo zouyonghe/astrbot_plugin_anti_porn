@@ -74,7 +74,11 @@ class AntiPorn(Star):
         event.stop_event()
 
     def _local_censor_check(self, message: str) -> bool:
-        local_censor_keywords = self.config.get("local_censor_keywords", "").split(";")
+        local_censor_keywords = [
+            kw.strip()
+            for kw in self.config.get("local_censor_keywords", "").split(";")
+            if kw.strip()
+        ]
         # 如果敏感词列表为空，直接返回 False 或其他适当的处理
         if not local_censor_keywords:
             return False
@@ -245,7 +249,7 @@ class AntiPorn(Star):
                 yield event.plain_result("📜 目前审查群组名单为空")
                 return
 
-            sensor_list_str = "\n".join(f"- {group_sensor_list}")
+            sensor_list_str = "\n".join([f"- {item}" for item in group_sensor_list])
             yield event.plain_result(f"📜 当前审查群组名单:\n{sensor_list_str}")
         except Exception as e:
             logger.error(f"查询审查群组名单失败: {e}")
