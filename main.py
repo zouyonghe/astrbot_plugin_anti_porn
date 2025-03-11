@@ -48,7 +48,7 @@ class AntiPorn(Star):
                 duration=self.config.get("group_ban_time", 5) * 60,
                 self_id=int(event.get_self_id())
             )
-            logger.info(f"Banned user: {event.get_sender_id()} for 5 minutes")
+            logger.info(f"Banned user: {event.get_sender_id()} for {self.config.get('group_ban_time', 5)} minutes")
 
         except Exception as e:
             logger.error(f"Failed to delete and ban: {e}")
