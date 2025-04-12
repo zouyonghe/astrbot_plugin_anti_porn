@@ -89,12 +89,16 @@ class AntiPorn(Star):
 
         custom_guidelines = self.config.get("custom_guideline", "")
         censor_prompt = (
-            f"Analyze the following message and determine whether it contains actual pornography or inappropriate content, "
-            f"considering the overall context. Do not judge based on isolated words or phrases. "
-            f"Additionally, consider the following user-defined guidelines when making your judgment:"
+            "Analyze the following message and determine whether it contains actual pornography, "
+            "offensive material, or inappropriate content. Avoid isolated judgment based on specific words or phrases. "
+            "It is critical to understand the context of the message when making a decision. "
+            "Examine the content holistically, and do not assume intent incorrectly. "
+            "Also, consider the following user-defined guidelines when analyzing:\n\n"
             f"{custom_guidelines}\n\n"
-            f"Answer only 'Yes' or 'No' with no additional explanation.\n\n"
+            "If the message is determined to contain inappropriate or pornographic content based on the context and guidelines, "
+            "answer ONLY 'Yes'. Otherwise, answer ONLY 'No'. Do not include any explanations or additional output.\n\n"
             f"Message: {message}"
+
         )
 
         try:
