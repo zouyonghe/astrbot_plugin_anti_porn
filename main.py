@@ -6,7 +6,7 @@ from aiocqhttp import CQHttp
 from astrbot.api.all import *
 from astrbot.api.event.filter import *
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.5", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.6", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
 class AntiPorn(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -75,6 +75,11 @@ class AntiPorn(Star):
                 return True
         return False
 
+    def _get_custom_guidelines(self) -> str:
+        return self.config.get("custom_guidelines", "") or self.config.get(
+            "custom_guideline", ""
+        )
+
     async def _llm_censor_check(self, event: AstrMessageEvent, message: str):
         """调用 LLM 进行敏感内容检测，只有在消息字数 < 50 并且满足概率要求时才执行"""
         llm_probability = float(self.config.get("llm_censor_probability", 0.1))
@@ -87,7 +92,7 @@ class AntiPorn(Star):
             logger.warning("No available LLM provider")
             return
 
-        custom_guidelines = self.config.get("custom_guideline", "")
+        custom_guidelines = self._get_custom_guidelines()
         censor_prompt = (
             "Analyze the following message and determine whether it contains actual pornography, "
             "offensive material, or inappropriate content. Avoid isolated judgment based on specific words or phrases. "
@@ -111,6 +116,108 @@ class AntiPorn(Star):
             logger.error(f"LLM censor request failed: {e}")
 
         return
+
+    def _collect_image_sources(self, event: AstrMessageEvent) -> list[str]:
+        sources: list[str] = []
+        seen: set[str] = set()
+
+        def add_source(val: str, origin: str):
+            if not val:
+                return
+            if val in seen:
+                return
+            seen.add(val)
+            sources.append(val)
+            logger.debug(f"✓ 收集图片源({origin}): {str(val)[:80]}")
+
+        def extract_from_components(components, origin: str):
+            if not components:
+                return
+            for comp in components:
+                try:
+                    if comp.__class__.__name__ == "Image":
+                        if getattr(comp, "url", None):
+                            add_source(comp.url, origin)
+                        elif getattr(comp, "file", None):
+                            add_source(comp.file, origin)
+                        continue
+
+                    if comp.__class__.__name__ == "File":
+                        file_val = getattr(comp, "file", None) or getattr(comp, "url", None)
+                        add_source(file_val, origin)
+                        continue
+
+                    if comp.__class__.__name__ == "Reply" and getattr(comp, "chain", None):
+                        extract_from_components(comp.chain, "引用消息")
+                        continue
+
+                    if comp.__class__.__name__ == "Node":
+                        node_content = getattr(comp, "content", None)
+                        extract_from_components(node_content, "合并转发")
+                        continue
+
+                    if comp.__class__.__name__ == "Nodes":
+                        nodes = getattr(comp, "nodes", None) or getattr(comp, "list", None)
+                        extract_from_components(nodes, "合并转发")
+                        continue
+                except Exception as e:
+                    logger.debug(f"提取图片源异常: {e}")
+
+        try:
+            message_chain = event.get_messages()
+        except Exception:
+            message_chain = getattr(event.message_obj, "message", []) or []
+
+        extract_from_components(message_chain, "当前消息")
+
+        return sources
+
+    async def _llm_image_censor_check(
+        self, event: AstrMessageEvent, image_sources: list[str]
+    ) -> bool:
+        image_probability = float(self.config.get("image_censor_probability", 1.0))
+        if image_probability <= 0 or random.random() > image_probability:
+            return False
+
+        provider = self.context.get_using_provider()
+        if not provider:
+            logger.warning("No available LLM provider")
+            return False
+
+        provider_modalities = provider.provider_config.get("modalities") or []
+        if provider_modalities and "image" not in provider_modalities:
+            logger.debug("Provider does not support image input, skip image censor")
+            return False
+
+        custom_guidelines = self._get_custom_guidelines()
+        censor_prompt = (
+            "Analyze the attached image(s) and determine whether they contain pornography, "
+            "explicit nudity, or inappropriate content. Avoid isolated judgment based on specific elements. "
+            "It is critical to understand the context of the image when making a decision. "
+            "Examine the content holistically, and do not assume intent incorrectly. "
+            "Also, consider the following user-defined guidelines when analyzing:\n\n"
+            f"{custom_guidelines}\n\n"
+            "If any image is determined to contain inappropriate or pornographic content based on the context and guidelines, "
+            "answer ONLY 'Yes'. Otherwise, answer ONLY 'No'. Do not include any explanations or additional output."
+        )
+
+        for image_source in image_sources:
+            try:
+                response = await provider.text_chat(
+                    censor_prompt,
+                    session_id=str(event.get_sender_id()),
+                    image_urls=[image_source],
+                )
+                if response and response.completion_text:
+                    result = response.completion_text.strip().lower()
+                    if result.startswith("yes") or result.endswith("yes"):
+                        return True
+            except Exception as e:
+                logger.error(
+                    f"LLM image censor request failed: {e}, image={str(image_source)[:80]}"
+                )
+
+        return False
 
     @event_message_type(EventMessageType.GROUP_MESSAGE, priority=10)
     async def sensor_porn(self, event: AstrMessageEvent):
@@ -144,6 +251,13 @@ class AntiPorn(Star):
                     logger.debug(f"LLM censor found illegal message: {message_content}")
                     await self._delete_and_ban(event, message_content, client)
                     return
+
+        image_sources = self._collect_image_sources(event)
+        if image_sources:
+            logger.debug(f"Image sources found: {len(image_sources)}")
+            if await self._llm_image_censor_check(event, image_sources):
+                await self._delete_and_ban(event, "image content", client)
+                return
 
     @command_group("anti_porn")
     def anti_porn(self):

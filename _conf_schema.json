@@ -29,6 +29,12 @@
         "default": 0.1,
         "hint": "根据设置的概率对所有消息随机审查，0代表不使用LLM审查，1代表必然使用LLM审查"
     },
+    "image_censor_probability": {
+        "type": "float",
+        "description": "调用LLM审查图片概率",
+        "default": 1,
+        "hint": "根据设置的概率对图片进行审查，0代表不使用LLM审查，1代表必然使用LLM审查"
+    },
     "custom_guidelines": {
         "type": "string",
         "description": "LLM审查附加要求",
