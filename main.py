@@ -6,11 +6,48 @@ from aiocqhttp import CQHttp
 from astrbot.api.all import *
 from astrbot.api.event.filter import *
 
-@register("astrbot_plugin_anti_porn", "buding", "一个用于反瑟瑟的插件", "1.0.6", "https://github.com/zouyonghe/astrbot_plugin_anti_porn")
+
+@register(
+    "astrbot_plugin_anti_porn",
+    "buding",
+    "一个用于反瑟瑟的插件",
+    "1.0.6",
+    "https://github.com/zouyonghe/astrbot_plugin_anti_porn",
+)
 class AntiPorn(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
+
+    def _provider_supports_image(self, provider) -> bool:
+        provider_modalities = provider.provider_config.get("modalities") or []
+        return not provider_modalities or "image" in provider_modalities
+
+    def _get_censor_provider(
+        self,
+        config_key: str,
+        *,
+        require_image_support: bool = False,
+    ):
+        provider_id = str(self.config.get(config_key, "") or "").strip()
+        provider = None
+
+        if provider_id:
+            provider = self.context.get_provider_by_id(provider_id)
+            if not provider:
+                logger.warning(
+                    f"Configured censor provider not found: {provider_id}, fallback to current provider"
+                )
+            elif require_image_support and not self._provider_supports_image(provider):
+                logger.warning(
+                    f"Configured censor provider does not support image input: {provider_id}, fallback to current provider"
+                )
+                provider = None
+
+        if not provider:
+            provider = self.context.get_using_provider()
+
+        return provider
 
     async def _admin_check(self, event: AstrMessageEvent, client: CQHttp) -> bool:
         """检查当前 bot 是否是群管理员或群主并且消息发送者不是管理员或群主"""
@@ -19,9 +56,21 @@ class AntiPorn(Star):
             group_id = int(event.get_group_id())
             bot_id = int(event.get_self_id())
 
-            bot_info = await client.get_group_member_info(group_id=group_id, user_id=bot_id, no_cache=True, self_id=int(event.get_self_id()))
-            sender_info = await client.get_group_member_info(group_id=group_id, user_id=sender_id, no_cache=True, self_id=int(event.get_self_id()))
-            return bot_info.get("role") in ["admin", "owner"] and sender_info.get("role") not in ["admin", "owner"]
+            bot_info = await client.get_group_member_info(
+                group_id=group_id,
+                user_id=bot_id,
+                no_cache=True,
+                self_id=int(event.get_self_id()),
+            )
+            sender_info = await client.get_group_member_info(
+                group_id=group_id,
+                user_id=sender_id,
+                no_cache=True,
+                self_id=int(event.get_self_id()),
+            )
+            return bot_info.get("role") in ["admin", "owner"] and sender_info.get(
+                "role"
+            ) not in ["admin", "owner"]
         except Exception as e:
             logger.error(f"获取群成员信息失败: {e}")
             return False
@@ -33,12 +82,14 @@ class AntiPorn(Star):
             return True
         return False
 
-    async def _delete_and_ban(self, event: AstrMessageEvent, message: str, client: CQHttp):
+    async def _delete_and_ban(
+        self, event: AstrMessageEvent, message: str, client: CQHttp
+    ):
         """删除消息并禁言用户"""
         try:
             await client.delete_msg(
                 message_id=int(event.message_obj.message_id),
-                self_id=int(event.get_self_id())
+                self_id=int(event.get_self_id()),
             )
             logger.info(f"Anti porn deleted message: {message}")
 
@@ -46,9 +97,11 @@ class AntiPorn(Star):
                 group_id=int(event.get_group_id()),
                 user_id=int(event.get_sender_id()),
                 duration=self.config.get("group_ban_time", 5) * 60,
-                self_id=int(event.get_self_id())
+                self_id=int(event.get_self_id()),
             )
-            logger.info(f"Banned user: {event.get_sender_id()} for {self.config.get('group_ban_time', 5)} minutes")
+            logger.info(
+                f"Banned user: {event.get_sender_id()} for {self.config.get('group_ban_time', 5)} minutes"
+            )
 
         except Exception as e:
             logger.error(f"Failed to delete and ban: {e}")
@@ -87,7 +140,7 @@ class AntiPorn(Star):
             return
 
         """调用 LLM 进行敏感内容检测"""
-        provider = self.context.get_using_provider()
+        provider = self._get_censor_provider("text_censor_provider_id")
         if not provider:
             logger.warning("No available LLM provider")
             return
@@ -103,11 +156,12 @@ class AntiPorn(Star):
             "If the message is determined to contain inappropriate or pornographic content based on the context and guidelines, "
             "answer ONLY 'Yes'. Otherwise, answer ONLY 'No'. Do not include any explanations or additional output.\n\n"
             f"Message: {message}"
-
         )
 
         try:
-            response = await provider.text_chat(censor_prompt, session_id=str(event.get_sender_id()))
+            response = await provider.text_chat(
+                censor_prompt, session_id=str(event.get_sender_id())
+            )
             if response and response.completion_text:
                 result = response.completion_text.strip().lower()
                 return result.startswith("yes") or result.endswith("yes")
@@ -143,11 +197,15 @@ class AntiPorn(Star):
                         continue
 
                     if comp.__class__.__name__ == "File":
-                        file_val = getattr(comp, "file", None) or getattr(comp, "url", None)
+                        file_val = getattr(comp, "file", None) or getattr(
+                            comp, "url", None
+                        )
                         add_source(file_val, origin)
                         continue
 
-                    if comp.__class__.__name__ == "Reply" and getattr(comp, "chain", None):
+                    if comp.__class__.__name__ == "Reply" and getattr(
+                        comp, "chain", None
+                    ):
                         extract_from_components(comp.chain, "引用消息")
                         continue
 
@@ -157,7 +215,9 @@ class AntiPorn(Star):
                         continue
 
                     if comp.__class__.__name__ == "Nodes":
-                        nodes = getattr(comp, "nodes", None) or getattr(comp, "list", None)
+                        nodes = getattr(comp, "nodes", None) or getattr(
+                            comp, "list", None
+                        )
                         extract_from_components(nodes, "合并转发")
                         continue
                 except Exception as e:
@@ -179,13 +239,15 @@ class AntiPorn(Star):
         if image_probability <= 0 or random.random() > image_probability:
             return False
 
-        provider = self.context.get_using_provider()
+        provider = self._get_censor_provider(
+            "image_censor_provider_id",
+            require_image_support=True,
+        )
         if not provider:
             logger.warning("No available LLM provider")
             return False
 
-        provider_modalities = provider.provider_config.get("modalities") or []
-        if provider_modalities and "image" not in provider_modalities:
+        if not self._provider_supports_image(provider):
             logger.debug("Provider does not support image input, skip image censor")
             return False
 
@@ -228,7 +290,10 @@ class AntiPorn(Star):
         if not self._in_group_sensor_list(event):
             return
 
-        from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import AiocqhttpMessageEvent
+        from astrbot.core.platform.sources.aiocqhttp.aiocqhttp_message_event import (
+            AiocqhttpMessageEvent,
+        )
+
         assert isinstance(event, AiocqhttpMessageEvent)
         client = event.bot
         # 检查bot为管理员，消息发送者不为管理员
@@ -242,7 +307,9 @@ class AntiPorn(Star):
                 logger.debug(f"Text message content: {message_content}")
                 # 本地检查
                 if self._local_censor_check(message_content):
-                    logger.debug(f"Local sensor found illegal message: {message_content}")
+                    logger.debug(
+                        f"Local sensor found illegal message: {message_content}"
+                    )
                     await self._delete_and_ban(event, message_content, client)
                     return
 

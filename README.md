@@ -22,7 +22,9 @@
 - **高度可配置化**：
     - `local_censor_keywords`：本地敏感词列表（以 `;` 分隔）。
     - `llm_censor_probability`：LLM 审查触发概率（默认 `0.1`）。
+    - `text_censor_provider_id`：文本审核使用的 Provider ID，留空时回退到当前默认对话模型。
     - `image_censor_probability`：LLM 审查图片概率（默认 `1`）。
+    - `image_censor_provider_id`：图片审核使用的 Provider ID，留空时回退到当前默认对话模型。
     - `enable_anti_porn`：启用或禁用反瑟瑟插件。
     - `group_sensor_list`：限制审查的群组列表。
     - `group_ban_time`：禁言时长（单位：分钟，默认 `1` 分钟）。
@@ -73,6 +75,7 @@
 
 - **自定义敏感词规则**：修改配置项 `local_censor_keywords`。
 - **调整 LLM 检测概率**：修改 `llm_censor_probability` 配置值。
+- **指定审核模型**：为 `text_censor_provider_id` / `image_censor_provider_id` 填入单独的 Provider ID。
 - **定制禁言时长**：编辑 `group_ban_time`。
   如需要更多功能扩展，开发者可通过插件的事件与权限接口实现进一步自定义。
 
