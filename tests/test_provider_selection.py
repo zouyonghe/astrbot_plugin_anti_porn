@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -8,6 +9,7 @@ import pytest
 
 
 PLUGIN_MAIN_PATH = Path(__file__).resolve().parents[1] / "main.py"
+PLUGIN_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "_conf_schema.json"
 MODULE_SPEC = importlib.util.spec_from_file_location(
     "astrbot_plugin_anti_porn_main",
     PLUGIN_MAIN_PATH,
@@ -64,6 +66,13 @@ def build_plugin(config: dict, context: FakeContext) -> AntiPorn:
     plugin.config = config
     plugin.context = context
     return plugin
+
+
+def test_provider_fields_use_select_provider_special_widget() -> None:
+    schema = json.loads(PLUGIN_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+    assert schema["text_censor_provider_id"]["_special"] == "select_provider"
+    assert schema["image_censor_provider_id"]["_special"] == "select_provider"
 
 
 @pytest.mark.asyncio

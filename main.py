@@ -11,7 +11,7 @@ from astrbot.api.event.filter import *
     "astrbot_plugin_anti_porn",
     "buding",
     "一个用于反瑟瑟的插件",
-    "1.0.6",
+    "1.0.7",
     "https://github.com/zouyonghe/astrbot_plugin_anti_porn",
 )
 class AntiPorn(Star):

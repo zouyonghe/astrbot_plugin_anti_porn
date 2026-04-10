@@ -33,7 +33,8 @@
         "type": "string",
         "description": "文本审核使用的Provider ID",
         "default": "",
-        "hint": "填写 AstrBot 已配置的对话 Provider ID。留空则回退到当前默认对话模型"
+        "hint": "从 AstrBot 已配置的对话 Provider 列表中选择。留空则回退到当前默认对话模型",
+        "_special": "select_provider"
     },
     "image_censor_probability": {
         "type": "float",
@@ -45,7 +46,8 @@
         "type": "string",
         "description": "图片审核使用的Provider ID",
         "default": "",
-        "hint": "填写 AstrBot 已配置的支持图片输入的 Provider ID。留空则回退到当前默认对话模型"
+        "hint": "从 AstrBot 已配置的对话 Provider 列表中选择。请优先选择支持图片输入的 Provider。留空则回退到当前默认对话模型",
+        "_special": "select_provider"
     },
     "custom_guidelines": {
         "type": "string",
